@@ -5,6 +5,7 @@
  * `startPointerDrag` (or drive a `DragSession` themselves); targets register
  * an element with `registerDropTarget` and are told about drags over it.
  */
+import { trackDragPress } from "./trackDragPress";
 import styles from "./pointerDrag.module.css";
 
 /** What is dragged: `type` is matched by targets (e.g. `application/x-openidea-editor-tab`). */
@@ -112,7 +113,7 @@ export interface PointerDrop {
  * (an editor tab released outside the window detaches into a new window).
  */
 export function startPointerDrag(
-  e: { button: number; clientX: number; clientY: number; altKey: boolean },
+  e: { pointerId: number; button: number; clientX: number; clientY: number; altKey: boolean },
   source: HTMLElement,
   data: DragData,
   opts: { onStart?: () => void; onEnd?: (dragged: boolean, drop?: PointerDrop) => void } = {},
@@ -162,9 +163,7 @@ export function startPointerDrag(
     opts.onEnd?.(true);
   };
   const cleanup = () => {
-    window.removeEventListener("pointermove", onMove);
-    window.removeEventListener("pointerup", onUp);
-    window.removeEventListener("pointercancel", onCancel);
+    stopTracking();
     window.removeEventListener("keydown", onKey, true);
     ghost?.remove();
     document.documentElement.classList.remove(styles.dragging!);
@@ -175,9 +174,7 @@ export function startPointerDrag(
     cleanup();
     opts.onEnd?.(dragged);
   };
-  window.addEventListener("pointermove", onMove);
-  window.addEventListener("pointerup", onUp);
-  window.addEventListener("pointercancel", onCancel);
+  const stopTracking = trackDragPress(e.pointerId, onMove, onUp, onCancel);
   window.addEventListener("keydown", onKey, true);
   return onCancel;
 }

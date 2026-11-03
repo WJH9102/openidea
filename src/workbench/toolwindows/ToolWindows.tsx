@@ -1,3 +1,4 @@
+import { trackDragPress } from "@/ui/trackDragPress";
 import {
   useEffect,
   useLayoutEffect,
@@ -332,9 +333,7 @@ function startStripeDrag(e: PointerEvent<HTMLButtonElement>, id: string) {
     if (drop?.slot !== cur?.slot || drop?.before !== cur?.before) useStripeDrag.setState({ drop });
   };
   const finish = (commit: boolean) => {
-    window.removeEventListener("pointermove", onMove);
-    window.removeEventListener("pointerup", onUp);
-    window.removeEventListener("pointercancel", onCancel);
+    stopTracking();
     window.removeEventListener("keydown", onKey, true);
     if (!ghost) return;
     ghost.remove();
@@ -352,9 +351,7 @@ function startStripeDrag(e: PointerEvent<HTMLButtonElement>, id: string) {
     ev.stopPropagation();
     finish(false);
   };
-  window.addEventListener("pointermove", onMove);
-  window.addEventListener("pointerup", onUp);
-  window.addEventListener("pointercancel", onCancel);
+  const stopTracking = trackDragPress(e.pointerId, onMove, onUp, onCancel);
   window.addEventListener("keydown", onKey, true);
 }
 

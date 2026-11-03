@@ -3,6 +3,7 @@
  * colours (file decorations), inline create / rename, drag & drop moves,
  * OS file drops and keyboard file operations.
  */
+import { trackDragPress } from "@/ui/trackDragPress";
 import {
   memo,
   useCallback,
@@ -622,15 +623,13 @@ export function ProjectView() {
       }
     };
     const cleanup = () => {
-      window.removeEventListener("pointermove", move);
-      window.removeEventListener("pointerup", up);
+      stopTracking();
       window.removeEventListener("keydown", key, true);
       files?.cancel();
       setDropTarget(null);
       setDrag(null);
     };
-    window.addEventListener("pointermove", move);
-    window.addEventListener("pointerup", up);
+    const stopTracking = trackDragPress(e.pointerId, move, up, cleanup);
     window.addEventListener("keydown", key, true);
   }, []);
 

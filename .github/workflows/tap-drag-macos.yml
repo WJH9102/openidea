@@ -1,0 +1,32 @@
+name: Tap-to-click macOS arm64 build
+on:
+  push:
+    branches: [fix/macos-tap-drag]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 11 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm }
+      - uses: dtolnay/rust-toolchain@stable
+        with: { targets: aarch64-apple-darwin }
+      - uses: Swatinem/rust-cache@v2
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm tauri build --target aarch64-apple-darwin --bundles dmg --config '{"bundle":{"createUpdaterArtifacts":false}}'
+      - name: Verify executable architecture
+        run: lipo -verify_arch arm64 target/aarch64-apple-darwin/release/bundle/macos/OpenIDEA.app/Contents/MacOS/openidea
+      - uses: actions/upload-artifact@v4
+        with:
+          name: OpenIDEA-macOS-arm64
+          path: target/aarch64-apple-darwin/release/bundle/dmg/*.dmg
+          if-no-files-found: error

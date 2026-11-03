@@ -24,7 +24,7 @@ jobs:
       - run: pnpm test
       - run: pnpm tauri build --target aarch64-apple-darwin --bundles dmg --config '{"bundle":{"createUpdaterArtifacts":false}}'
       - name: Verify executable architecture
-        run: lipo -verify_arch arm64 target/aarch64-apple-darwin/release/bundle/macos/OpenIDEA.app/Contents/MacOS/openidea
+        run: lipo target/aarch64-apple-darwin/release/bundle/macos/OpenIDEA.app/Contents/MacOS/openidea -verify_arch arm64
       - uses: actions/upload-artifact@v4
         with:
           name: OpenIDEA-macOS-arm64

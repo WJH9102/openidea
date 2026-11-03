@@ -23,10 +23,19 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm tauri build --target aarch64-apple-darwin --bundles dmg --config '{"bundle":{"createUpdaterArtifacts":false}}'
-      - name: Verify executable architecture
-        run: lipo target/aarch64-apple-darwin/release/bundle/macos/OpenIDEA.app/Contents/MacOS/openidea -verify_arch arm64
       - uses: actions/upload-artifact@v4
         with:
           name: OpenIDEA-macOS-arm64
           path: target/aarch64-apple-darwin/release/bundle/dmg/*.dmg
           if-no-files-found: error
+      - name: Verify executable in the uploaded DMG
+        run: |
+          set -euo pipefail
+          images=(target/aarch64-apple-darwin/release/bundle/dmg/*.dmg)
+          test "${#images[@]}" -eq 1
+          mount_dir=$(mktemp -d)
+          hdiutil attach -readonly -nobrowse -mountpoint "$mount_dir" "${images[0]}"
+          trap 'hdiutil detach "$mount_dir"' EXIT
+          app="$mount_dir/OpenIDEA.app/Contents"
+          executable=$(/usr/libexec/PlistBuddy -c 'Print CFBundleExecutable' "$app/Info.plist")
+          lipo "$app/MacOS/$executable" -verify_arch arm64
